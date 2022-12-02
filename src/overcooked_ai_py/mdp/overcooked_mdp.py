@@ -959,6 +959,9 @@ class OvercookedState(object):
         )
 
     def time_independent_equal(self, other):
+        if not isinstance(other, OvercookedState):
+            return False
+
         order_lists_equal = (
             self.all_orders == other.all_orders
             and self.bonus_orders == other.bonus_orders
