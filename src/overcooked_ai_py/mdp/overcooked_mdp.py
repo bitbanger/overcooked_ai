@@ -725,7 +725,7 @@ class PlayerState(object):
         return self.held_object
 
     def set_object(self, obj):
-        assert not self.has_object()
+        # assert not self.has_object()
         obj.position = self.position
         self.held_object = obj
 
@@ -1474,7 +1474,8 @@ class OvercookedGridworld(object):
                     obj = player.remove_object()
                     new_state.add_object(obj, i_pos)
 
-                elif not player.has_object() and new_state.has_object(i_pos):
+                # elif not player.has_object() and new_state.has_object(i_pos):
+                elif new_state.has_object(i_pos):
                     obj_name = new_state.get_object(i_pos).name
                     self.log_object_pickup(
                         events_infos,
@@ -1484,24 +1485,40 @@ class OvercookedGridworld(object):
                         player_idx,
                     )
 
+                    # If the player was holding an item, swap it onto the counter
+                    held = None
+                    if player.has_object():
+                        held = player.remove_object()
+
                     # Pick up object from counter
                     obj = new_state.remove_object(i_pos)
                     player.set_object(obj)
+                    if held is not None:
+                        new_state.add_object(held, i_pos)
 
-            elif terrain_type == "O" and player.held_object is None:
+            # elif terrain_type == "O" and player.held_object is None:
+            elif terrain_type == "O":
                 self.log_object_pickup(
                     events_infos, new_state, "onion", pot_states, player_idx
                 )
 
                 # Onion pickup from dispenser
-                obj = ObjectState("onion", pos)
-                player.set_object(obj)
+                if player.has_object() and player.get_object().name == "onion":
+                    player.remove_object()
+                else:
+                    obj = ObjectState("onion", pos)
+                    player.set_object(obj)
 
-            elif terrain_type == "T" and player.held_object is None:
+            # elif terrain_type == "T" and player.held_object is None:
+            elif terrain_type == "T":
                 # Tomato pickup from dispenser
-                player.set_object(ObjectState("tomato", pos))
+                if player.has_object() and player.get_object().name == "tomato":
+                    player.remove_object()
+                else:
+                    player.set_object(ObjectState("tomato", pos))
 
-            elif terrain_type == "D" and player.held_object is None:
+            # elif terrain_type == "D" and player.held_object is None:
+            elif terrain_type == "D":
                 self.log_object_pickup(
                     events_infos, new_state, "dish", pot_states, player_idx
                 )
@@ -1513,8 +1530,11 @@ class OvercookedGridworld(object):
                     ]
 
                 # Perform dish pickup from dispenser
-                obj = ObjectState("dish", pos)
-                player.set_object(obj)
+                if player.has_object() and player.get_object().name == "dish":
+                    player.remove_object()
+                else:
+                    obj = ObjectState("dish", pos)
+                    player.set_object(obj)
 
             elif terrain_type == "P" and not player.has_object():
                 # An interact action will only start cooking the soup if we are using the new dynamics
